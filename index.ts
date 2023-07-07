@@ -107,19 +107,19 @@ async function sendMails() {
 
     const account = config.get(`friendlyNames.${t.account}`) || t.account
     const status = t.status == "pending" ? "בתהליך אישור" : "סופי"
-    const date = t.date.toLocaleString('he-IL')
+    const date = t.date.toLocaleString('he-IL', { year: '2-digit', month: '2-digit', day: '2-digit', hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false })
 
 
 
     const msg = {
       to: <string[]>config.get('targets'),
       from: <string>config.get('sender'),
-      subject: `חיוב חדש - ${t.description} - ${-t.amount}`,
+      subject: `חיוב חדש - ${t.description} - ₪${-t.amount}`,
       text:
         `חשבון: ${account}
 תאריך: ${date}
 שם העסק: ${t.description}
-סכום: ${-t.amount}
+סכום: ₪${-t.amount}
 הערה: ${t.memo}
 סטטוס: ${status}`
     }
