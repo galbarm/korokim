@@ -12,7 +12,7 @@ export default {
         "2222": "הפועלים"
     },
 
-    startDate: "2023-07-05",
+    daysAgo: 7,
 
     sender: "your_verified_sendgrid@email.address",
     targets: ["target@gmail.com"],

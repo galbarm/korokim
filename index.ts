@@ -62,9 +62,12 @@ async function fillDiscovered() {
 
 
 async function fetch(account: any): Promise<ScraperScrapingResult> {
+  var date = new Date()
+  date.setDate(date.getDate() - <number>config.get('daysAgo'));
+
   const options = {
     companyId: account.company,
-    startDate: new Date(config.get('startDate')),
+    startDate: date,
     combineInstallments: false,
     showBrowser: false,
     timeout: 60000,
