@@ -1,25 +1,39 @@
 import crypto from 'crypto'
-import Debug from 'debug'
 import mongoose from 'mongoose'
 import Transaction from './transaction'
 import config from 'config'
-import {ScraperScrapingResult, createScraper} from 'israeli-bank-scrapers'
+import { ScraperScrapingResult, createScraper } from 'israeli-bank-scrapers'
 import sgMail from '@sendgrid/mail'
+import winston from 'winston'
 
-const debug = Debug('korokim')
 sgMail.setApiKey(config.get('sendGridAPIKey'))
 
 const accounts: any[] = config.get('accounts')
 const discovered: string[] = [];
 
+const logger = winston.createLogger({
+  level: 'debug',
+  levels: winston.config.syslog.levels,
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.colorize({ all: true }),
+    winston.format.printf(
+      (info) => `[${info.timestamp}] ${info.message}`
+    )
+  ),
+  transports: [
+    new winston.transports.Console
+  ],
+});
+
 
 (async function () {
-  debug("connecting to mongodb")
+  logger.info("connecting to mongodb")
   await mongoose.connect(config.get('mongoUrl'))
-  debug("connected to mongodb")
+  logger.info("connected to mongodb")
 
   await fillDiscovered()
-  debug(`filled discovered with ${discovered.length} transactions`)
+  logger.info(`filled discovered with ${discovered.length} transactions`)
 
   updateLoop()
 })()
@@ -29,13 +43,13 @@ async function updateLoop() {
   for await (const account of accounts) {
     try {
       const scrapingResult = await fetch(account)
-      debug("fetched scraped transactions")
-      debug(scrapingResult)
 
       const transactions = convertResultToTransactions(scrapingResult)
       const newTransactions = transactions.filter(txn => !discovered.includes(txn._id))
 
-      debug(`New transactions: ${newTransactions}`)
+      if (newTransactions.length > 0) {
+        logger.notice(`New transactions: ${newTransactions}`)
+      }
 
       for await (const transaction of newTransactions) {
         await transaction.save()
@@ -43,14 +57,14 @@ async function updateLoop() {
       }
     }
     catch (e) {
-      debug(`updating account failed: ${e}`)
+      logger.warn(`updating account failed: ${e}`)
     }
   }
 
   await sendMails()
 
   const interval = <number>config.get('updateIntervalMin')
-  debug(`going to sleep for ${interval} mins`)
+  logger.info(`going to sleep for ${interval} mins`)
   setTimeout(updateLoop, 1000 * 60 * interval)
 }
 
@@ -83,15 +97,16 @@ async function fetch(account: any): Promise<ScraperScrapingResult> {
     userCode: account.userCode
   }
 
-  debug(`fetching company ${options.companyId}...`)
-  
+  logger.info(`fetching company ${options.companyId}...`)
+
   const scraper = createScraper(options)
   const result = await scraper.scrape(credentials)
+
+  logger.debug(result)
 
   if (result.success) {
     return result
   } else {
-    debug(result)
     throw new Error(result.errorType)
   }
 }
@@ -137,7 +152,7 @@ async function sendMails() {
     }
 
     const result = await sgMail.send(msg)
-    debug(`email sent. sendgrid send result: ${result}`)
+    logger.info(`email for transaction id ${t._id} sent. sendgrid send result: ${result}`)
 
     await t.updateOne({ sentMail: true })
   }
