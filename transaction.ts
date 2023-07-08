@@ -1,9 +1,9 @@
-import mongoose from 'mongoose';
-const { Schema, model } = mongoose;
+import mongoose from 'mongoose'
+const { Schema, model } = mongoose
 
 
 export interface ITransaction extends Document{
-  _id: string;
+  _id: string,
   account: string,  
   id: string,
   status: string,
@@ -28,8 +28,8 @@ const TransactionSchema = new Schema<ITransaction>({
       index: true
     }
   },
-  { versionKey: false });
+  { versionKey: false })
 
-  const Transaction = model<ITransaction>('Transaction', TransactionSchema);
+  const Transaction = model<ITransaction>('Transaction', TransactionSchema)
 
-  export default Transaction;
+  export default Transaction

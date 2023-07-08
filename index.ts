@@ -3,7 +3,7 @@ import Debug from 'debug'
 import mongoose from 'mongoose'
 import Transaction from './transaction'
 import config from 'config'
-import {ScraperScrapingResult, createScraper} from 'israeli-bank-scrapers';
+import {ScraperScrapingResult, createScraper} from 'israeli-bank-scrapers'
 import sgMail from '@sendgrid/mail'
 
 const debug = Debug('korokim')
@@ -32,7 +32,7 @@ async function updateLoop() {
       debug("fetched scraped transactions")
       debug(scrapingResult)
 
-      const transactions = convertResultToTransactions(scrapingResult);
+      const transactions = convertResultToTransactions(scrapingResult)
       const newTransactions = transactions.filter(txn => !discovered.includes(txn._id))
 
       debug(`New transactions: ${newTransactions}`)
@@ -43,11 +43,11 @@ async function updateLoop() {
       }
     }
     catch (e) {
-      debug(`updating account failed: ${e}`);
+      debug(`updating account failed: ${e}`)
     }
   }
 
-  sendMails()
+  await sendMails()
 
   const interval = <number>config.get('updateIntervalMin')
   debug(`going to sleep for ${interval} mins`)
@@ -56,7 +56,7 @@ async function updateLoop() {
 
 
 async function fillDiscovered() {
-  const docs = await Transaction.find({}, "_id");
+  const docs = await Transaction.find({}, "_id")
   docs.forEach(doc => discovered.push(doc._id))
 }
 
@@ -78,18 +78,18 @@ async function fetch(account: any): Promise<ScraperScrapingResult> {
     card6Digits: account.card6Digits,
     num: account.num,
     userCode: account.userCode
-  };
+  }
 
   debug(`fetching company ${options.companyId}...`)
   
-  const scraper = createScraper(options);
-  const result = await scraper.scrape(credentials);
+  const scraper = createScraper(options)
+  const result = await scraper.scrape(credentials)
 
   if (result.success) {
-    return result;
+    return result
   } else {
     debug(result)
-    throw new Error(result.errorType);
+    throw new Error(result.errorType)
   }
 }
 
@@ -111,7 +111,7 @@ function convertResultToTransactions(result: ScraperScrapingResult) {
 }
 
 async function sendMails() {
-  const toSend = await Transaction.find({ sentMail: false });
+  const toSend = await Transaction.find({ sentMail: false })
   for await (const t of toSend) {
 
     const account = config.get(`friendlyNames.${t.account}`) || t.account
