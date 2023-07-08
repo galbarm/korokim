@@ -3,13 +3,14 @@ import Debug from 'debug'
 import mongoose from 'mongoose'
 import Transaction from './transaction'
 import config from 'config'
-import { ScraperCredentials, ScraperOptions, ScraperScrapingResult, createScraper } from 'israeli-bank-scrapers';
+import {ScraperScrapingResult, createScraper} from 'israeli-bank-scrapers';
 import sgMail from '@sendgrid/mail'
 
 const debug = Debug('korokim')
 sgMail.setApiKey(config.get('sendGridAPIKey'))
 
-let discovered: string[] = [];
+const accounts: any[] = config.get('accounts')
+const discovered: string[] = [];
 
 
 (async function () {
@@ -25,30 +26,9 @@ let discovered: string[] = [];
 
 
 async function updateLoop() {
-  const accounts: any[] = config.get('accounts')
-
   for await (const account of accounts) {
     try {
-      const options = {
-        companyId: account.company,
-        startDate: new Date(config.get('startDate')),
-        combineInstallments: false,
-        showBrowser: false,
-        timeout: 60000,
-        defaultTimeout: 60000
-      }
-
-      const credentials = {
-        username: account.username,
-        password: account.password,
-        id: account.id,
-        card6Digits: account.card6Digits,
-        num: account.num,
-        userCode: account.userCode
-      };
-
-      debug(`fetching company ${options.companyId}...`)
-      const scrapingResult = await fetch(options, credentials)
+      const scrapingResult = await fetch(account)
       debug("fetched scraped transactions")
       debug(scrapingResult)
 
@@ -69,7 +49,9 @@ async function updateLoop() {
 
   sendMails()
 
-  setTimeout(updateLoop, 1000 * 60 * <number>config.get('updateIntervalMin'))
+  const interval = <number>config.get('updateIntervalMin')
+  debug(`going to sleep for ${interval} mins`)
+  setTimeout(updateLoop, 1000 * 60 * interval)
 }
 
 
@@ -79,7 +61,27 @@ async function fillDiscovered() {
 }
 
 
-async function fetch(options: ScraperOptions, credentials: ScraperCredentials): Promise<ScraperScrapingResult> {
+async function fetch(account: any): Promise<ScraperScrapingResult> {
+  const options = {
+    companyId: account.company,
+    startDate: new Date(config.get('startDate')),
+    combineInstallments: false,
+    showBrowser: false,
+    timeout: 60000,
+    defaultTimeout: 60000
+  }
+
+  const credentials = {
+    username: account.username,
+    password: account.password,
+    id: account.id,
+    card6Digits: account.card6Digits,
+    num: account.num,
+    userCode: account.userCode
+  };
+
+  debug(`fetching company ${options.companyId}...`)
+  
   const scraper = createScraper(options);
   const result = await scraper.scrape(credentials);
 
