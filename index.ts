@@ -33,7 +33,9 @@ async function updateLoop() {
         companyId: account.company,
         startDate: new Date(config.get('startDate')),
         combineInstallments: false,
-        showBrowser: false
+        showBrowser: false,
+        timeout: 60000,
+        defaultTimeout: 60000
       }
 
       const credentials = {
