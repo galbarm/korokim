@@ -28,35 +28,40 @@ async function updateLoop() {
   const accounts: any[] = config.get('accounts')
 
   for await (const account of accounts) {
-    const options = {
-      companyId: account.company,
-      startDate: new Date(config.get('startDate')),
-      combineInstallments: false,
-      showBrowser: false
+    try {
+      const options = {
+        companyId: account.company,
+        startDate: new Date(config.get('startDate')),
+        combineInstallments: false,
+        showBrowser: false
+      }
+
+      const credentials = {
+        username: account.username,
+        password: account.password,
+        id: account.id,
+        card6Digits: account.card6Digits,
+        num: account.num,
+        userCode: account.userCode
+      };
+
+      debug(`fetching company ${options.companyId}...`)
+      const scrapingResult = await fetch(options, credentials)
+      debug("fetched scraped transactions")
+      debug(scrapingResult)
+
+      const transactions = convertResultToTransactions(scrapingResult);
+      const newTransactions = transactions.filter(txn => !discovered.includes(txn._id))
+
+      debug(`New transactions: ${newTransactions}`)
+
+      for await (const transaction of newTransactions) {
+        await transaction.save()
+        discovered.push(transaction._id)
+      }
     }
-
-    const credentials = {
-      username: account.username,
-      password: account.password,
-      id: account.id,
-      card6Digits: account.card6Digits,
-      num: account.num,
-      userCode: account.userCode
-    };
-
-    debug(`fetching company ${options.companyId}...`)
-    const scrapingResult = await fetch(options, credentials)
-    debug("fetched scraped transactions")
-    debug(scrapingResult)
-
-    const transactions = convertResultToTransactions(scrapingResult);
-    const newTransactions = transactions.filter(txn => !discovered.includes(txn._id))
-
-    debug(`New transactions: ${newTransactions}`)
-
-    for await (const transaction of newTransactions) {
-      await transaction.save()
-      discovered.push(transaction._id)
+    catch (e) {
+      debug(`updating account failed: ${e}`);
     }
   }
 
