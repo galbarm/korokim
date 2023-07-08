@@ -57,7 +57,7 @@ async function updateLoop() {
       }
     }
     catch (e) {
-      logger.warn(`updating account failed: ${e}`)
+      logger.warning(`updating account failed: ${e}`)
     }
   }
 
