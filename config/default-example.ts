@@ -5,7 +5,12 @@ import { CompanyTypes } from 'israeli-bank-scrapers';
 export default {
     mongoUrl: "",
 
-    sendGridAPIKey: "",
+    sendGrid:{
+        apiKey: "",
+        templateId: "",
+        sender: "verified_sendgrid@email.address",
+        targets: ["target1@gmail.com", "target2@gmail.com"]
+    },
 
     friendlyNames: {
         "1111": "max",
@@ -13,9 +18,6 @@ export default {
     },
 
     daysAgo: 7,
-
-    sender: "your_verified_sendgrid@email.address",
-    targets: ["target@gmail.com"],
 
     updateIntervalMin: 60,
 

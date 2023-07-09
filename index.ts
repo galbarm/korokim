@@ -6,7 +6,7 @@ import { ScraperScrapingResult, createScraper } from 'israeli-bank-scrapers'
 import sgMail from '@sendgrid/mail'
 import winston from 'winston'
 
-sgMail.setApiKey(config.get('sendGridAPIKey'))
+sgMail.setApiKey(config.get('sendGrid.apiKey'))
 
 const accounts: any[] = config.get('accounts')
 const discovered: string[] = [];
@@ -130,25 +130,23 @@ function convertResultToTransactions(result: ScraperScrapingResult) {
 
 async function sendMails() {
   const toSend = await Transaction.find({ sentMail: false })
+
   for await (const t of toSend) {
-
-    const account = config.get(`friendlyNames.${t.account}`) || t.account
-    const status = t.status == "pending" ? "בתהליך אישור" : "סופי"
-    const date = t.date.toLocaleString('he-IL', { year: '2-digit', month: '2-digit', day: '2-digit', hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Jerusalem" }).replace(/\./g, '/')
-
+    const templateData = {
+      account: `${config.get(`friendlyNames.${t.account}`) || t.account}`,
+      date: `${t.date.toLocaleString('he-IL', { year: '2-digit', month: '2-digit', day: '2-digit', hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Jerusalem" }).replace(/\./g, '/')}`,
+      description: `${t.description}`,
+      amount: `₪${-t.amount}`,
+      status: t.status == "pending" ? "בתהליך אישור" : "סופי",
+      memo: `${t.memo}`
+    };
 
     const msg = {
-      to: <string[]>config.get('targets'),
-      from: <string>config.get('sender'),
-      subject: `חיוב חדש - ${t.description} - ₪${-t.amount}`,
-      text:
-        `חשבון: ${account}
-תאריך: ${date}
-שם העסק: ${t.description}
-סכום: ₪${-t.amount}
-הערה: ${t.memo}
-סטטוס: ${status}`
-    }
+      from: <string>config.get('sendGrid.sender'),
+      to: <string[]>config.get('sendGrid.targets'),
+      templateId: <string>config.get('sendGrid.templateId'),
+      dynamicTemplateData: templateData
+    };
 
     const result = await sgMail.send(msg)
     logger.info(`email for transaction id ${t._id} sent. sendgrid send result: ${result}`)
