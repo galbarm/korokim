@@ -5,10 +5,13 @@ import { CompanyTypes } from 'israeli-bank-scrapers';
 export default {
     mongoUrl: "",
 
-    sendGrid:{
+    sendGrid: {
         apiKey: "",
         templateId: "",
-        sender: "verified_sendgrid@email.address",
+        from: {
+            email: "verified_sendgrid@email.address",
+            name: "name"
+        },
         targets: ["target1@gmail.com", "target2@gmail.com"]
     },
 
@@ -32,7 +35,7 @@ export default {
             username: "username2",
             password: "password2"
         },
-         {
+        {
             company: CompanyTypes.hapoalim,
             userCode: "username3",
             password: "password3"

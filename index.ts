@@ -122,7 +122,7 @@ function convertResultToTransactions(result: ScraperScrapingResult) {
       date: txn.date,
       amount: txn.originalAmount,
       description: txn.description,
-      memo: txn.memo,
+      memo: txn.memo ?? "",
       sentMail: false
     })
   })) || []
@@ -145,7 +145,10 @@ async function sendMails() {
     };
 
     const msg = {
-      from: <string>config.get('sendGrid.sender'),
+      from: {
+        email: <string>config.get('sendGrid.from.email'),
+        name: <string>config.get('sendGrid.from.name')
+      },
       to: <string[]>config.get('sendGrid.targets'),
       templateId: <string>config.get('sendGrid.templateId'),
       dynamicTemplateData: templateData
