@@ -137,7 +137,7 @@ async function sendMails() {
       account: `${config.get(`friendlyNames.${t.account}`) || t.account}`,
       date: moment(t.date).tz('Asia/Jerusalem').format('HH:mm - DD/MM/YYYY'),
       description: `${t.description}`,
-      amount: `₪${-t.amount}`,
+      amount: `₪${(-t.amount).toFixed(2)}`,
       status: t.status == "pending" ? "בתהליך אישור" : "סופי",
       memo: `${t.memo}`
     };
