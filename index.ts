@@ -16,7 +16,7 @@ const logger = winston.createLogger({
   level: 'debug',
   levels: winston.config.syslog.levels,
   format: winston.format.combine(
-    winston.format.timestamp({format: moment().tz('Asia/Jerusalem').format('YYYY-MM-DD HH:mm:ss.SSS')}),
+    winston.format.timestamp({format: () => moment().tz('Asia/Jerusalem').format('YYYY-MM-DD HH:mm:ss.SSS')}),
     winston.format.colorize({ all: true }),
     winston.format.printf(
       (info) => `[${info.timestamp}] ${info.message}`
