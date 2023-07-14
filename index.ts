@@ -121,7 +121,10 @@ function convertResultToTransactions(result: ScraperScrapingResult) {
       id: txn.identifier,
       status: txn.status,
       date: txn.date,
-      amount: txn.chargedAmount,
+      originalAmount: txn.originalAmount,
+      originalCurrency: txn.originalCurrency,
+      chargedAmount: txn.chargedAmount,
+      chargedCurrency: txn.chargedCurrency ?? "₪",
       description: txn.description,
       memo: txn.memo ?? "",
       sentMail: false
@@ -137,7 +140,8 @@ async function sendMails() {
       account: `${config.get(`friendlyNames.${t.account}`) || t.account}`,
       date: moment(t.date).tz('Asia/Jerusalem').format('HH:mm - DD/MM/YYYY'),
       description: `${t.description}`,
-      amount: `₪${(-t.amount).toFixed(2)}`,
+      originalAmount: `${t.originalCurrency}${(-t.originalAmount).toFixed(2)}`,
+      chargedAmount: `${t.chargedCurrency}${(-t.chargedAmount).toFixed(2)}`,
       status: t.status == "pending" ? "בתהליך אישור" : "סופי",
       memo: `${t.memo}`
     };

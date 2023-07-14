@@ -8,7 +8,10 @@ export interface ITransaction extends Document{
   id: string,
   status: string,
   date: Date,
-  amount: number,
+  originalAmount: Number,
+  originalCurrency: String,
+  chargedAmount: Number,
+  chargedCurrency: String,
   description: string,
   memo: string,
   sentMail: boolean
@@ -20,7 +23,10 @@ const TransactionSchema = new Schema<ITransaction>({
     id: String,
     status: String,
     date: Date,
-    amount: Number,
+    originalAmount: Number,
+    originalCurrency: String,
+    chargedAmount: Number,
+    chargedCurrency: String,
     description: String,
     memo: String,
     sentMail: {
