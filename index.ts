@@ -121,7 +121,7 @@ function convertResultToTransactions(result: ScraperScrapingResult) {
       id: txn.identifier,
       status: txn.status,
       date: txn.date,
-      amount: txn.originalAmount,
+      amount: txn.chargedAmount,
       description: txn.description,
       memo: txn.memo ?? "",
       sentMail: false
