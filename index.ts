@@ -5,6 +5,7 @@ import config from 'config'
 import { ScraperScrapingResult, createScraper } from 'israeli-bank-scrapers'
 import sgMail from '@sendgrid/mail'
 import winston from 'winston'
+import moment from 'moment-timezone'
 
 sgMail.setApiKey(config.get('sendGrid.apiKey'))
 
@@ -15,7 +16,7 @@ const logger = winston.createLogger({
   level: 'debug',
   levels: winston.config.syslog.levels,
   format: winston.format.combine(
-    winston.format.timestamp(),
+    winston.format.timestamp({format: moment().tz('Asia/Jerusalem').format('YYYY-MM-DD HH:mm:ss.SSS')}),
     winston.format.colorize({ all: true }),
     winston.format.printf(
       (info) => `[${info.timestamp}] ${info.message}`
@@ -132,12 +133,9 @@ async function sendMails() {
   const toSend = await Transaction.find({ sentMail: false })
 
   for await (const t of toSend) {
-    const date = `${t.date.toLocaleString('he-IL', { year: '2-digit', month: '2-digit', day: '2-digit', timeZone: "Asia/Jerusalem" }).replace(/\./g, '/')}`
-    const time = `${t.date.toLocaleString('he-IL', { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Jerusalem" })}`
-
     const templateData = {
       account: `${config.get(`friendlyNames.${t.account}`) || t.account}`,
-      date: `${time}, ${date}`,
+      date: moment(t.date).tz('Asia/Jerusalem').format('HH:mm - DD/MM/YYYY'),
       description: `${t.description}`,
       amount: `₪${-t.amount}`,
       status: t.status == "pending" ? "בתהליך אישור" : "סופי",
