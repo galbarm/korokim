@@ -1,14 +1,14 @@
 {
   "dependencies": {
-    "@sendgrid/mail": "^7.7.0",
-    "config": "^3.3.9",
-    "israeli-bank-scrapers": "^3.10.2",
-    "moment": "^2.29.4",
-    "mongoose": "^7.3.1",
-    "typescript": "^5.1.6",
-    "winston": "^3.9.0"
+    "@sendgrid/mail": "latest",
+    "config": "latest",
+    "israeli-bank-scrapers": "latest",
+    "moment": "latest",
+    "mongoose": "latest",
+    "typescript": "latest",
+    "winston": "latest"
   },
   "devDependencies": {
-    "@types/config": "^3.3.0"
+    "@types/config": "latest"
   }
 }
