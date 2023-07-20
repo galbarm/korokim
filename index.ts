@@ -10,13 +10,13 @@ import moment from 'moment-timezone'
 sgMail.setApiKey(config.get('sendGrid.apiKey'))
 
 const accounts: any[] = config.get('accounts')
-const discovered: string[] = [];
+const discovered: string[] = []
 
 const logger = winston.createLogger({
   level: 'debug',
   levels: winston.config.syslog.levels,
   format: winston.format.combine(
-    winston.format.timestamp({format: () => moment().tz('Asia/Jerusalem').format('YYYY-MM-DD HH:mm:ss.SSS')}),
+    winston.format.timestamp({ format: () => moment().tz('Asia/Jerusalem').format('YYYY-MM-DD HH:mm:ss.SSS') }),
     winston.format.colorize({ all: true }),
     winston.format.printf(
       (info) => `[${info.timestamp}] ${info.message}`
@@ -33,7 +33,7 @@ const logger = winston.createLogger({
   await mongoose.connect(config.get('mongoUrl'))
   logger.info("connected to mongodb")
 
-  await fillDiscovered()
+  await fillDiscovered(startTime())
   logger.info(`filled discovered with ${discovered.length} transactions`)
 
   updateLoop()
@@ -43,7 +43,7 @@ const logger = winston.createLogger({
 async function updateLoop() {
   for await (const account of accounts) {
     try {
-      const scrapingResult = await fetch(account)
+      const scrapingResult = await fetch(account, startTime())
 
       const transactions = convertResultToTransactions(scrapingResult)
       const newTransactions = transactions.filter(txn => !discovered.includes(txn._id))
@@ -70,19 +70,16 @@ async function updateLoop() {
 }
 
 
-async function fillDiscovered() {
-  const docs = await Transaction.find({}, "_id")
+async function fillDiscovered(from: Date) {
+  const docs = await Transaction.find({ date: { $gte: from } }, "_id")
   docs.forEach(doc => discovered.push(doc._id))
 }
 
 
-async function fetch(account: any): Promise<ScraperScrapingResult> {
-  var date = new Date()
-  date.setDate(date.getDate() - <number>config.get('daysAgo'));
-
+async function fetch(account: any, from: Date): Promise<ScraperScrapingResult> {
   const options = {
     companyId: account.company,
-    startDate: date,
+    startDate: from,
     combineInstallments: false,
     showBrowser: false,
     timeout: 60000,
@@ -144,7 +141,7 @@ async function sendMails() {
       chargedAmount: `${t.chargedCurrency}${(-t.chargedAmount).toFixed(2)}`,
       status: t.status == "pending" ? "בתהליך אישור" : "סופי",
       memo: `${t.memo}`
-    };
+    }
 
     const msg = {
       from: {
@@ -154,11 +151,17 @@ async function sendMails() {
       to: <string[]>config.get('sendGrid.targets'),
       templateId: <string>config.get('sendGrid.templateId'),
       dynamicTemplateData: templateData
-    };
+    }
 
     const result = await sgMail.send(msg)
     logger.info(`email for transaction id ${t._id} sent. sendgrid send result: ${result}`)
 
     await t.updateOne({ sentMail: true })
   }
+}
+
+function startTime(): Date {
+  const startDate = new Date()
+  startDate.setDate(startDate.getDate() - <number>config.get('daysAgo'))
+  return startDate
 }
