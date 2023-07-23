@@ -113,7 +113,7 @@ async function fetch(account: any, from: Date): Promise<ScraperScrapingResult> {
 function convertResultToTransactions(result: ScraperScrapingResult) {
   return result.accounts?.flatMap(account => account.txns.flatMap(txn => {
     return new Transaction({
-      _id: crypto.createHash('md5').update(`${txn.identifier}-${txn.date}-${txn.originalAmount}-${txn.description}-${txn.memo}`).digest('hex'),
+      _id: crypto.createHash('md5').update(`${txn.identifier}-${txn.date}-${txn.originalAmount}-${txn.description}-${txn.memo}-${txn.status}`).digest('hex'),
       account: account.accountNumber,
       id: txn.identifier,
       status: txn.status,
