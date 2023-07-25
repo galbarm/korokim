@@ -30,7 +30,10 @@ const logger = winston.createLogger({
 
 (async function () {
   logger.info("connecting to mongodb")
-  await mongoose.connect(config.get('mongoUrl'))
+  const serverSelectionTimeoutMS = 60000;
+  await mongoose.connect(config.get('mongoUrl'), {
+    serverSelectionTimeoutMS
+  })
   logger.info("connected to mongodb")
 
   await fillDiscovered(startTime())
