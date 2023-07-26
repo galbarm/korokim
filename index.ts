@@ -29,23 +29,51 @@ const logger = winston.createLogger({
 
 
 (async function () {
-  logger.info("connecting to mongodb")
-  const serverSelectionTimeoutMS = 60000;
-  await mongoose.connect(config.get('mongoUrl'), {
-    serverSelectionTimeoutMS
-  })
-  logger.info("connected to mongodb")
+  const reconnectTimeout = 5000
+  const db = mongoose.connection
 
+  db.on('connecting', () => {
+    logger.info('Connecting to MongoDB...')
+  })
+
+  db.on('error', (error) => {
+    logger.error(`MongoDB connection error: ${error}`)
+    mongoose.disconnect()
+  });
+
+  db.on('connected', () => {
+    logger.info('Connected to MongoDB!')
+  })
+
+  db.once('open', () => {
+    logger.info('MongoDB connection opened!')
+  })
+
+  db.on('reconnected', () => {
+    logger.info('MongoDB reconnected!')
+  })
+
+  db.on('disconnected', () => {
+    logger.error(`MongoDB disconnected! Reconnecting in ${reconnectTimeout / 1000}s...`)
+    setTimeout(() => connectDB(), reconnectTimeout)
+  });
+
+  await connectDB()
   await fillDiscovered(startTime())
   logger.info(`filled discovered with ${discovered.length} transactions`)
 
   updateLoop()
 })()
 
+async function connectDB() {
+  mongoose.connect(config.get('mongoUrl'))
+    .catch(() => { })
+}
 
 async function updateLoop() {
-  for await (const account of accounts) {
-    try {
+  try {
+    for await (const account of accounts) {
+
       const scrapingResult = await fetch(account, startTime())
 
       const transactions = convertResultToTransactions(scrapingResult)
@@ -60,12 +88,12 @@ async function updateLoop() {
         discovered.push(transaction._id)
       }
     }
-    catch (e) {
-      logger.warning(`updating account failed: ${e}`)
-    }
-  }
 
-  await sendMails()
+    await sendMails()
+  }
+  catch (e) {
+    logger.warning(`updating failed: ${e}`)
+  }
 
   const interval = <number>config.get('updateIntervalMin')
   logger.info(`going to sleep for ${interval} mins`)
