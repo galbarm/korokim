@@ -59,7 +59,7 @@ const logger = winston.createLogger({
   });
 
   await connectDB()
-  await fillDiscovered(startTime())
+  await fillDiscovered(startTimeMinusWeek())
   logger.info(`filled discovered with ${discovered.length} transactions`)
 
   updateLoop()
@@ -194,5 +194,11 @@ async function sendMails() {
 function startTime(): Date {
   const startDate = new Date()
   startDate.setDate(startDate.getDate() - <number>config.get('daysAgo'))
+  return startDate
+}
+
+function startTimeMinusWeek(): Date {
+  const startDate = new Date()
+  startDate.setDate(startDate.getDate() - (<number>config.get('daysAgo') + 7))
   return startDate
 }
