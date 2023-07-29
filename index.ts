@@ -23,7 +23,8 @@ const logger = winston.createLogger({
     )
   ),
   transports: [
-    new winston.transports.Console
+    new winston.transports.Console,
+    new winston.transports.File({ filename: 'log.log' })
   ],
 });
 
@@ -95,9 +96,12 @@ async function updateLoop() {
     logger.warning(`updating failed: ${e}`)
   }
 
-  const interval = <number>config.get('updateIntervalMin')
-  logger.info(`going to sleep for ${interval} mins`)
-  setTimeout(updateLoop, 1000 * 60 * interval)
+  // const interval = <number>config.get('updateIntervalMin')
+  // logger.info(`going to sleep for ${interval} mins`)
+  // setTimeout(updateLoop, 1000 * 60 * interval)
+
+  logger.info(`exiting`)
+  process.exit()
 }
 
 
