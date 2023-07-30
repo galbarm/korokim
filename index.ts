@@ -74,19 +74,23 @@ async function connectDB() {
 async function updateLoop() {
   try {
     for await (const account of accounts) {
+      try {
+        const scrapingResult = await fetch(account, startTime())
 
-      const scrapingResult = await fetch(account, startTime())
+        const transactions = convertResultToTransactions(scrapingResult)
+        const newTransactions = transactions.filter(txn => !discovered.includes(txn._id))
 
-      const transactions = convertResultToTransactions(scrapingResult)
-      const newTransactions = transactions.filter(txn => !discovered.includes(txn._id))
+        if (newTransactions.length > 0) {
+          logger.notice(`New transactions: ${newTransactions}`)
+        }
 
-      if (newTransactions.length > 0) {
-        logger.notice(`New transactions: ${newTransactions}`)
+        for await (const transaction of newTransactions) {
+          await transaction.save()
+          discovered.push(transaction._id)
+        }
       }
-
-      for await (const transaction of newTransactions) {
-        await transaction.save()
-        discovered.push(transaction._id)
+      catch (e) {
+        logger.warning(`updating account ${account} failed: ${e}`)
       }
     }
 
