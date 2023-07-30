@@ -117,8 +117,8 @@ async function fetch(account: any, from: Date): Promise<ScraperScrapingResult> {
     startDate: from,
     combineInstallments: false,
     showBrowser: false,
-    timeout: 60000,
-    defaultTimeout: 60000
+    timeout: 120000,
+    defaultTimeout: 120000
   }
 
   const credentials = {
