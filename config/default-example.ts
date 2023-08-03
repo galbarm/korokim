@@ -24,6 +24,10 @@ export default {
 
     updateIntervalMin: 60,
 
+    toIgnore: [
+        "bad transaction"
+    ],
+
     accounts: [
         {
             company: CompanyTypes.visaCal,

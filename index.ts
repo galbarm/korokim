@@ -10,6 +10,7 @@ import moment from 'moment-timezone'
 sgMail.setApiKey(config.get('sendGrid.apiKey'))
 
 const accounts: any[] = config.get('accounts')
+const toIgnore: string[] = config.get('toIgnore')
 const discovered: string[] = []
 
 const logger = winston.createLogger({
@@ -78,7 +79,9 @@ async function updateLoop() {
         const scrapingResult = await fetch(account, startTime())
 
         const transactions = convertResultToTransactions(scrapingResult)
-        const newTransactions = transactions.filter(txn => !discovered.includes(txn._id))
+        const newTransactions = transactions
+          .filter(txn => !discovered.includes(txn._id))
+          .filter(txn => !toIgnore.includes(txn.description))
 
         if (newTransactions.length > 0) {
           logger.notice(`New transactions: ${newTransactions}`)
