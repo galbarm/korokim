@@ -3,11 +3,17 @@ import mongoose from 'mongoose'
 import Transaction from './transaction'
 import config from 'config'
 import { ScraperScrapingResult, createScraper } from 'israeli-bank-scrapers'
-import sgMail from '@sendgrid/mail'
+import nodemailer from 'nodemailer'
 import winston from 'winston'
 import moment from 'moment-timezone'
 
-sgMail.setApiKey(config.get('sendGrid.apiKey'))
+const transporter = nodemailer.createTransport({
+  service: config.get('nodemailer.service'),
+  auth: {
+    user: config.get('nodemailer.auth.user'),
+    pass: config.get('nodemailer.auth.pass')
+  }
+});
 
 const accounts: any[] = config.get('accounts')
 const toIgnore: string[] = config.get('toIgnore')
@@ -103,12 +109,12 @@ async function updateLoop() {
     logger.warning(`updating failed: ${e}`)
   }
 
-  // const interval = <number>config.get('updateIntervalMin')
-  // logger.info(`going to sleep for ${interval} mins`)
-  // setTimeout(updateLoop, 1000 * 60 * interval)
+  const interval = <number>config.get('updateIntervalMin')
+  logger.info(`going to sleep for ${interval} mins`)
+  setTimeout(updateLoop, 1000 * 60 * interval)
 
-  logger.info(`exiting`)
-  process.exit()
+  // logger.info(`exiting`)
+  // process.exit()
 }
 
 
@@ -175,28 +181,60 @@ async function sendMails() {
   const toSend = await Transaction.find({ sentMail: false })
 
   for await (const t of toSend) {
-    const templateData = {
-      account: `${config.get(`friendlyNames.${t.account}`) || t.account}`,
-      date: moment(t.date).tz('Asia/Jerusalem').format('HH:mm - DD/MM/YYYY'),
-      description: `${t.description}`,
-      originalAmount: `${t.originalCurrency}${(-t.originalAmount).toFixed(2)}`,
-      chargedAmount: `${t.chargedCurrency}${(-t.chargedAmount).toFixed(2)}`,
-      status: t.status == "pending" ? "בתהליך אישור" : "סופי",
-      memo: `${t.memo}`
-    }
+    const account =  `${config.get(`friendlyNames.${t.account}`) || t.account}`
+    const date = moment(t.date).tz('Asia/Jerusalem').format('HH:mm - DD/MM/YYYY')
+    const description = `${t.description}`
+    const originalAmount = `${t.originalCurrency}${(-t.originalAmount).toFixed(2)}`
+    const chargedAmount = `${t.chargedCurrency}${(-t.chargedAmount).toFixed(2)}`
+    const status = t.status == "pending" ? "בתהליך אישור" : "סופי"
+    const memo = `${t.memo}`
 
-    const msg = {
-      from: {
-        email: <string>config.get('sendGrid.from.email'),
-        name: <string>config.get('sendGrid.from.name')
-      },
-      to: <string[]>config.get('sendGrid.targets'),
-      templateId: <string>config.get('sendGrid.templateId'),
-      dynamicTemplateData: templateData
-    }
+    const emailHtmlContent = `
+<table style="border-collapse: collapse; max-width: 500px; width: 100%; font-family: Arial, sans-serif; background-color: #f9f9f9;">
+  <colgroup>
+    <col style="width: 75%;">
+    <col style="width: 25%;">
+  </colgroup>
+  <tr>
+    <td style="border: 1px solid #dddddd; padding: 8px; text-align: right;">${account}</td>
+    <th style="border: 1px solid #dddddd; padding: 8px; text-align: right;">חשבון</th>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #dddddd; padding: 8px; text-align: right;">${date}</td>
+    <th style="border: 1px solid #dddddd; padding: 8px; text-align: right;">תאריך</th>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #dddddd; padding: 8px; text-align: right;">${description}</td>
+    <th style="border: 1px solid #dddddd; padding: 8px; text-align: right;">תיאור</th>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #dddddd; padding: 8px; text-align: right;">${originalAmount}</td>
+    <th style="border: 1px solid #dddddd; padding: 8px; text-align: right;">סכום מקורי</th>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #dddddd; padding: 8px; text-align: right;">${chargedAmount}</td>
+    <th style="border: 1px solid #dddddd; padding: 8px; text-align: right;">סכום לחיוב</th>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #dddddd; padding: 8px; text-align: right;">${status}</td>
+    <th style="border: 1px solid #dddddd; padding: 8px; text-align: right;">סטטוס</th>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #dddddd; padding: 8px; text-align: right;">${memo}</td>
+    <th style="border: 1px solid #dddddd; padding: 8px; text-align: right;">הערה</th>
+  </tr>
+</table>
+    `
 
-    const result = await sgMail.send(msg)
-    logger.info(`email for transaction id ${t._id} sent. sendgrid send result: ${result}`)
+    const mailOptions = {
+      from: <string>config.get('nodemailer.from'),
+      to: <string>config.get('nodemailer.to'),
+      subject: `${description} - ${originalAmount}`,
+      html: emailHtmlContent
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    logger.info(`Email for transaction ID ${t._id} sent. Info: ${info.messageId}`);
 
     await t.updateOne({ sentMail: true })
   }

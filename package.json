@@ -1,14 +1,15 @@
 {
   "dependencies": {
-    "@sendgrid/mail": "latest",
     "config": "latest",
     "israeli-bank-scrapers": "latest",
     "moment": "latest",
     "mongoose": "latest",
+    "nodemailer": "latest",
     "typescript": "latest",
     "winston": "latest"
   },
   "devDependencies": {
-    "@types/config": "latest"
+    "@types/config": "latest",
+    "@types/nodemailer": "latest"
   }
 }
