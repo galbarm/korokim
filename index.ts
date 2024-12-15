@@ -181,7 +181,9 @@ async function sendMails() {
   const toSend = await Transaction.find({ sentMail: false })
 
   for await (const t of toSend) {
-    const account =  `${config.get(`friendlyNames.${t.account}`) || t.account}`
+    const account = config.has(`friendlyNames.${t.account}`)
+      ? `${config.get(`friendlyNames.${t.account}`)}`
+      : `${t.account}`
     const date = moment(t.date).tz('Asia/Jerusalem').format('HH:mm - DD/MM/YYYY')
     const description = `${t.description}`
     const originalAmount = `${t.originalCurrency}${(-t.originalAmount).toFixed(2)}`
