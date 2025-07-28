@@ -6,7 +6,8 @@
     "mongoose": "latest",
     "nodemailer": "latest",
     "typescript": "latest",
-    "winston": "latest"
+    "winston": "latest",
+    "puppeteer": "latest"
   },
   "devDependencies": {
     "@types/config": "latest",

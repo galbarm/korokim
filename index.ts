@@ -1,3 +1,6 @@
+//process.env.DEBUG = 'israeli-bank-scrapers:*';
+
+import puppeteer, { BrowserContext } from 'puppeteer';
 import crypto from 'crypto'
 import mongoose from 'mongoose'
 import Transaction from './transaction'
@@ -79,10 +82,14 @@ async function connectDB() {
 }
 
 async function updateLoop() {
+
+  const browser = await puppeteer.launch()
+  const browserContext = await browser.createBrowserContext()
+
   try {
     for await (const account of accounts) {
       try {
-        const scrapingResult = await fetch(account, startTime())
+        const scrapingResult = await fetch(account, startTime(), browserContext)
 
         const transactions = convertResultToTransactions(scrapingResult)
         const newTransactions = transactions
@@ -95,7 +102,9 @@ async function updateLoop() {
 
         for await (const transaction of newTransactions) {
           await transaction.save()
+          logger.info(`saved id ${transaction._id}`)
           discovered.push(transaction._id)
+          logger.info(`pushed id ${transaction._id}`)
         }
       }
       catch (e) {
@@ -107,6 +116,8 @@ async function updateLoop() {
   }
   catch (e) {
     logger.warning(`updating failed: ${e}`)
+  } finally {
+    browser.close()
   }
 
   const interval = <number>config.get('updateIntervalMin')
@@ -124,14 +135,16 @@ async function fillDiscovered(from: Date) {
 }
 
 
-async function fetch(account: any, from: Date): Promise<ScraperScrapingResult> {
+async function fetch(account: any, from: Date, browser: BrowserContext): Promise<ScraperScrapingResult> {
   const options = {
     companyId: account.company,
     startDate: from,
+    browser,
     combineInstallments: false,
-    showBrowser: false,
+    //showBrowser: false,
     timeout: 120000,
-    defaultTimeout: 120000
+    defaultTimeout: 120000,
+    skipCloseBrowser: true
   }
 
   const credentials = {
@@ -144,7 +157,7 @@ async function fetch(account: any, from: Date): Promise<ScraperScrapingResult> {
   }
 
   logger.info(`fetching company ${options.companyId}...`)
-
+  
   const scraper = createScraper(options)
   const result = await scraper.scrape(credentials)
 
