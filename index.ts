@@ -82,13 +82,14 @@ async function connectDB() {
 }
 
 async function updateLoop() {
-
-  const browser = await puppeteer.launch()
-  const browserContext = await browser.createBrowserContext()
-
   try {
     for await (const account of accounts) {
       try {
+        const browser = await puppeteer.launch({
+          headless: true
+        })
+        const browserContext = await browser.createBrowserContext()
+
         const scrapingResult = await fetch(account, startTime(), browserContext)
 
         const transactions = convertResultToTransactions(scrapingResult)
@@ -106,6 +107,8 @@ async function updateLoop() {
           discovered.push(transaction._id)
           logger.info(`pushed id ${transaction._id}`)
         }
+
+        browser.close()
       }
       catch (e) {
         logger.warning(`updating account ${account} failed: ${e}`)
@@ -116,8 +119,6 @@ async function updateLoop() {
   }
   catch (e) {
     logger.warning(`updating failed: ${e}`)
-  } finally {
-    browser.close()
   }
 
   const interval = <number>config.get('updateIntervalMin')
