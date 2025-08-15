@@ -1,6 +1,5 @@
 //process.env.DEBUG = 'israeli-bank-scrapers:*';
 
-import puppeteer, { BrowserContext } from 'puppeteer';
 import crypto from 'crypto'
 import mongoose from 'mongoose'
 import Transaction from './transaction'
@@ -9,6 +8,7 @@ import { ScraperScrapingResult, createScraper } from 'israeli-bank-scrapers'
 import nodemailer from 'nodemailer'
 import winston from 'winston'
 import moment from 'moment-timezone'
+import { generateTransactionEmailHtml } from './email-template'
 
 const transporter = nodemailer.createTransport({
   service: config.get('nodemailer.service'),
@@ -85,12 +85,7 @@ async function updateLoop() {
   try {
     for await (const account of accounts) {
       try {
-        const browser = await puppeteer.launch({
-          headless: true
-        })
-        const browserContext = await browser.createBrowserContext()
-
-        const scrapingResult = await fetch(account, startTime(), browserContext)
+        const scrapingResult = await fetch(account, startTime())
 
         const transactions = convertResultToTransactions(scrapingResult)
         const newTransactions = transactions
@@ -107,8 +102,6 @@ async function updateLoop() {
           discovered.push(transaction._id)
           logger.info(`pushed id ${transaction._id}`)
         }
-
-        browser.close()
       }
       catch (e) {
         logger.warning(`updating account ${account} failed: ${e}`)
@@ -124,9 +117,6 @@ async function updateLoop() {
   const interval = <number>config.get('updateIntervalMin')
   logger.info(`going to sleep for ${interval} mins`)
   setTimeout(updateLoop, 1000 * 60 * interval)
-
-  // logger.info(`exiting`)
-  // process.exit()
 }
 
 
@@ -136,16 +126,14 @@ async function fillDiscovered(from: Date) {
 }
 
 
-async function fetch(account: any, from: Date, browser: BrowserContext): Promise<ScraperScrapingResult> {
+async function fetch(account: any, from: Date): Promise<ScraperScrapingResult> {
   const options = {
     companyId: account.company,
     startDate: from,
-    browser,
     combineInstallments: false,
-    //showBrowser: false,
+    showBrowser: false,
     timeout: 120000,
-    defaultTimeout: 120000,
-    skipCloseBrowser: true
+    defaultTimeout: 120000
   }
 
   const credentials = {
@@ -205,42 +193,15 @@ async function sendMails() {
     const status = t.status == "pending" ? "בתהליך אישור" : "סופי"
     const memo = `${t.memo}`
 
-    const emailHtmlContent = `
-<table style="border-collapse: collapse; max-width: 500px; width: 100%; font-family: Arial, sans-serif; background-color: #f9f9f9;">
-  <colgroup>
-    <col style="width: 75%;">
-    <col style="width: 25%;">
-  </colgroup>
-  <tr>
-    <td style="border: 1px solid #dddddd; padding: 8px; text-align: right;">${account}</td>
-    <th style="border: 1px solid #dddddd; padding: 8px; text-align: right;">חשבון</th>
-  </tr>
-  <tr>
-    <td style="border: 1px solid #dddddd; padding: 8px; text-align: right;">${date}</td>
-    <th style="border: 1px solid #dddddd; padding: 8px; text-align: right;">תאריך</th>
-  </tr>
-  <tr>
-    <td style="border: 1px solid #dddddd; padding: 8px; text-align: right;">${description}</td>
-    <th style="border: 1px solid #dddddd; padding: 8px; text-align: right;">תיאור</th>
-  </tr>
-  <tr>
-    <td style="border: 1px solid #dddddd; padding: 8px; text-align: right;">${originalAmount}</td>
-    <th style="border: 1px solid #dddddd; padding: 8px; text-align: right;">סכום מקורי</th>
-  </tr>
-  <tr>
-    <td style="border: 1px solid #dddddd; padding: 8px; text-align: right;">${chargedAmount}</td>
-    <th style="border: 1px solid #dddddd; padding: 8px; text-align: right;">סכום לחיוב</th>
-  </tr>
-  <tr>
-    <td style="border: 1px solid #dddddd; padding: 8px; text-align: right;">${status}</td>
-    <th style="border: 1px solid #dddddd; padding: 8px; text-align: right;">סטטוס</th>
-  </tr>
-  <tr>
-    <td style="border: 1px solid #dddddd; padding: 8px; text-align: right;">${memo}</td>
-    <th style="border: 1px solid #dddddd; padding: 8px; text-align: right;">הערה</th>
-  </tr>
-</table>
-    `
+    const emailHtmlContent = generateTransactionEmailHtml({
+      account,
+      date,
+      description,
+      originalAmount,
+      chargedAmount,
+      status,
+      memo
+    })
 
     const mailOptions = {
       from: <string>config.get('nodemailer.from'),
