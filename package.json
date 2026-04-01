@@ -1,19 +1,22 @@
 {
   "scripts": {
-    "start": "npx ts-node index.ts"
+    "start": "node --no-deprecation -r ts-node/register src/index.ts"
   },
   "dependencies": {
     "config": "latest",
+    "dayjs": "latest",
+    "escape-html": "latest",
     "israeli-bank-scrapers": "latest",
-    "moment": "latest",
     "mongoose": "latest",
     "nodemailer": "latest",
-    "typescript": "latest",
-    "winston": "latest",
-    "puppeteer": "latest"
+    "puppeteer": "latest",
+    "winston": "latest"
   },
   "devDependencies": {
     "@types/config": "latest",
-    "@types/nodemailer": "latest"
+    "@types/escape-html": "latest",
+    "@types/nodemailer": "latest",
+    "ts-node": "latest",
+    "typescript": "latest"
   }
 }

@@ -2,16 +2,16 @@ import mongoose from 'mongoose'
 const { Schema, model } = mongoose
 
 
-export interface ITransaction extends Document{
+export interface ITransaction extends mongoose.Document<string>{
   _id: string,
   account: string,  
   id: string,
   status: string,
   date: Date,
-  originalAmount: Number,
-  originalCurrency: String,
-  chargedAmount: Number,
-  chargedCurrency: String,
+  originalAmount: number,
+  originalCurrency: string,
+  chargedAmount: number,
+  chargedCurrency: string,
   description: string,
   memo: string,
   sentMail: boolean
