@@ -73,17 +73,17 @@ const logger = winston.createLogger({
   await fillDiscovered(startTimeMinusWeek())
   logger.info(`filled discovered with ${discovered.length} transactions`)
 
-  updateLoop()
+  await updateLoop()
 })()
 
 async function connectDB() {
-  mongoose.connect(config.get('mongoUrl'))
-    .catch(() => { })
+  await mongoose.connect(config.get('mongoUrl'))
+    .catch((e) => { logger.error(`MongoDB connect failed: ${e}`); throw e; })
 }
 
 async function updateLoop() {
   try {
-    for await (const account of accounts) {
+    for (const account of accounts) {
       try {
         const scrapingResult = await fetch(account, startTime())
 
@@ -96,7 +96,7 @@ async function updateLoop() {
           logger.notice(`New transactions: ${newTransactions}`)
         }
 
-        for await (const transaction of newTransactions) {
+        for (const transaction of newTransactions) {
           await transaction.save()
           logger.info(`saved id ${transaction._id}`)
           discovered.push(transaction._id)
@@ -104,14 +104,14 @@ async function updateLoop() {
         }
       }
       catch (e) {
-        logger.warning(`updating account ${account} failed: ${e}`)
+        logger.warn(`updating account ${account} failed: ${e}`)
       }
     }
 
     await sendMails()
   }
   catch (e) {
-    logger.warning(`updating failed: ${e}`)
+    logger.warn(`updating failed: ${e}`)
   }
 
   const interval = <number>config.get('updateIntervalMin')
@@ -182,7 +182,7 @@ function convertResultToTransactions(result: ScraperScrapingResult) {
 async function sendMails() {
   const toSend = await Transaction.find({ sentMail: false })
 
-  for await (const t of toSend) {
+  for (const t of toSend) {
     const account = config.has(`friendlyNames.${t.account}`)
       ? `${config.get(`friendlyNames.${t.account}`)}`
       : `${t.account}`

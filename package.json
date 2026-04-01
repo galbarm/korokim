@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "start": "npx ts-node index.ts"
+  },
   "dependencies": {
     "config": "latest",
     "israeli-bank-scrapers": "latest",
