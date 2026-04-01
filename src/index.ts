@@ -38,7 +38,7 @@ async function updateLoop() {
           .filter(txn => !toIgnore.includes(txn.description))
 
         if (newTransactions.length > 0) {
-          logger.notice(`New transactions: ${newTransactions.map(t => t._id)}`)
+          logger.notice(`New transactions: ${JSON.stringify(newTransactions, null, 2)}`)
         }
 
         for (const transaction of newTransactions) {
@@ -49,14 +49,14 @@ async function updateLoop() {
         }
       }
       catch (e) {
-        logger.warn(`updating account ${account.company} failed: ${e}`)
+        logger.warning(`updating account ${account.company} failed: ${e}`)
       }
     }
 
     await sendMails()
   }
   catch (e) {
-    logger.warn(`updating failed: ${e}`)
+    logger.warning(`updating failed: ${e}`)
   }
 
 }

@@ -39,7 +39,7 @@ export async function scrape(account: any, from: Date): Promise<ScraperScrapingR
 export function convertResultToTransactions(result: ScraperScrapingResult) {
   return result.accounts?.flatMap(account => account.txns.flatMap(txn => {
     return new Transaction({
-      _id: crypto.createHash('md5').update(`${txn.identifier}-${txn.date}-${txn.originalAmount}-${txn.description}-${txn.memo}-${txn.status}`).digest('hex'),
+      _id: crypto.createHash('sha256').update(`${txn.identifier}-${txn.date}-${txn.originalAmount}-${txn.description}-${txn.memo}-${txn.status}`).digest('hex'),
       account: account.accountNumber,
       id: txn.identifier,
       status: txn.status,
