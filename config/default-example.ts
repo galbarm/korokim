@@ -1,4 +1,4 @@
-//fill and rename to default.ts
+//copy to default.ts and fill with your data
 
 import { CompanyTypes } from 'israeli-bank-scrapers';
 
@@ -11,7 +11,7 @@ export default {
             user: "user",
             pass: "pass"
         },
-        from: "from",
+        from: "korokim <from@gmail.com>",
         to: "target1@gmail.com"
     },
 
