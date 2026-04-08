@@ -4,6 +4,8 @@ Sends email notifications when detecting new transactions on Israeli bank & cred
 
 Uses [israeli-bank-scrapers](https://github.com/eshaham/israeli-bank-scrapers) to periodically fetch transactions, stores them in MongoDB, and sends an email for each new transaction via Nodemailer.
 
+<img src="assets/email-example-1.png" width="420" alt="Email notification example"> &nbsp; <img src="assets/email-example-2.png" width="420" alt="Email notification example">
+
 ## Prerequisites
 
 - Node.js
