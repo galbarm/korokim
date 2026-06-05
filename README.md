@@ -22,6 +22,7 @@ Uses [israeli-bank-scrapers](https://github.com/eshaham/israeli-bank-scrapers) t
    - `toIgnore` — transaction descriptions to skip
    - `daysAgo` — how far back to fetch transactions
    - `updateIntervalMin` — minutes between fetch cycles
+   - `timezone` — IANA timezone name used for dates in emails and logs
 
 2. Install dependencies:
    ```

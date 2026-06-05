@@ -20,6 +20,8 @@ export default {
         "2222": "הפועלים"
     },
 
+    timezone: "Asia/Jerusalem",
+
     daysAgo: 7,
 
     updateIntervalMin: 60,
