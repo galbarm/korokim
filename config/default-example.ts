@@ -34,7 +34,8 @@ export default {
         {
             company: CompanyTypes.visaCal,
             username: "username1",
-            password: "password1"
+            password: "password1",
+            pingUrl: "https://hc-ping.com/YOUR-UUID" // optional
         },
         {
             company: CompanyTypes.max,

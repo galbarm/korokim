@@ -34,6 +34,10 @@ Uses [israeli-bank-scrapers](https://github.com/eshaham/israeli-bank-scrapers) t
    npm start
    ```
 
+## Failure Notifications
+
+Each account optionally accepts a `pingUrl`. When set, a success ping (HTTP GET) is sent after each scrape. If the scraper keeps failing, pings stop and your monitoring service alerts you. Compatible with any ping-based monitoring service (e.g. [healthchecks.io](https://healthchecks.io)).
+
 ## Supported Banks & Credit Cards
 
 See [israeli-bank-scrapers](https://github.com/eshaham/israeli-bank-scrapers#supported-providers) for the full list of supported providers.

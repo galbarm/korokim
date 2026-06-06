@@ -4,6 +4,7 @@ import logger from './logger'
 import { connectDB } from './db'
 import { sendMails } from './mailer'
 import { scrape, convertResultToTransactions } from './scraper'
+import { ping } from './healthcheck'
 import { setTimeout as sleep } from 'node:timers/promises'
 
 const accounts: any[] = config.get('accounts')
@@ -28,6 +29,8 @@ main()
 
 async function updateLoop() {
   try {
+    const succeeded: any[] = []
+
     for (const account of accounts) {
       try {
         const scrapingResult = await scrape(account, startTime())
@@ -47,6 +50,8 @@ async function updateLoop() {
           discovered.add(transaction._id)
           logger.info(`pushed id ${transaction._id}`)
         }
+        
+        succeeded.push(account)
       }
       catch (e) {
         logger.warning(`updating account ${account.company} failed: ${e}`)
@@ -54,6 +59,10 @@ async function updateLoop() {
     }
 
     await sendMails()
+
+    for (const account of succeeded) {
+      if (account.pingUrl) ping(account.pingUrl)
+    }
   }
   catch (e) {
     logger.warning(`updating failed: ${e}`)
