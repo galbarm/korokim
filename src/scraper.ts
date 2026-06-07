@@ -10,7 +10,8 @@ export async function scrape(account: any, from: Date): Promise<ScraperScrapingR
     combineInstallments: false,
     showBrowser: false,
     timeout: 120000,
-    defaultTimeout: 120000
+    defaultTimeout: 120000,
+    args: ['--no-sandbox', '--disable-setuid-sandbox'],
   }
 
   const credentials = {

@@ -1,0 +1,30 @@
+name: Scrape
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Write config
+        run: echo "$CONFIG_DEFAULT" > config/default.ts
+        env:
+          CONFIG_DEFAULT: ${{ secrets.CONFIG_DEFAULT }}
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run scraper
+        run: npm start
+        env:
+          PUPPETEER_EXECUTABLE_PATH: /usr/bin/google-chrome-stable
