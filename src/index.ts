@@ -5,6 +5,7 @@ import { connectDB, disconnectDB } from './db'
 import { sendMails } from './mailer'
 import { scrape, convertResultToTransactions } from './scraper'
 import { ping } from './healthcheck'
+import { setTimeout as sleep } from 'node:timers/promises'
 
 const accounts: any[] = config.get('accounts')
 const toIgnore: string[] = config.get('toIgnore')
@@ -15,8 +16,18 @@ async function main() {
   await connectDB()
   await fillDiscovered(startTimeMinusWeek())
   logger.info(`filled discovered with ${discovered.size} transactions`)
-  await updateLoop()
-  await disconnectDB()
+
+  if (process.env.CI) {
+    await updateLoop()
+    await disconnectDB()
+  } else {
+    while (true) {
+      await updateLoop()
+      const interval = <number>config.get('updateIntervalMin')
+      logger.info(`going to sleep for ${interval} mins`)
+      await sleep(1000 * 60 * interval)
+    }
+  }
 }
 
 main()
