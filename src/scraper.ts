@@ -11,7 +11,7 @@ export async function scrape(account: any, from: Date): Promise<ScraperScrapingR
     showBrowser: false,
     timeout: 120000,
     defaultTimeout: 120000,
-    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    args: process.env.CI ? ['--no-sandbox', '--disable-setuid-sandbox'] : [],
   }
 
   const credentials = {
