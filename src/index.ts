@@ -20,6 +20,7 @@ async function main() {
   if (process.env.CI) {
     await updateLoop()
     await disconnectDB()
+    process.exit(0)
   } else {
     while (true) {
       await updateLoop()
