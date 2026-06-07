@@ -26,5 +26,3 @@ jobs:
 
       - name: Run scraper
         run: npm start
-        env:
-          PUPPETEER_EXECUTABLE_PATH: /usr/bin/google-chrome-stable
