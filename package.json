@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "start": "node --no-deprecation -r ts-node/register src/index.ts",
+    "start": "node -r ts-node/register src/index.ts",
     "push-config": "gh secret set CONFIG_DEFAULT < config/default.ts"
   },
   "dependencies": {

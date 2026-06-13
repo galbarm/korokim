@@ -1,16 +1,16 @@
-import Transaction from './transaction'
 import config from 'config'
+import { setTimeout as sleep } from 'node:timers/promises'
+import Transaction from './transaction'
 import logger from './logger'
+import { Account } from './types'
 import { connectDB, disconnectDB } from './db'
 import { sendMails } from './mailer'
 import { scrape, convertResultToTransactions } from './scraper'
 import { ping } from './healthcheck'
-import { setTimeout as sleep } from 'node:timers/promises'
 
-const accounts: any[] = config.get('accounts')
+const accounts: Account[] = config.get('accounts')
 const toIgnore: string[] = config.get('toIgnore')
 const discovered = new Set<string>()
-
 
 async function main() {
   await connectDB()
@@ -24,7 +24,7 @@ async function main() {
   } else {
     while (true) {
       await updateLoop()
-      const interval = <number>config.get('updateIntervalMin')
+      const interval = config.get('updateIntervalMin') as number
       logger.info(`going to sleep for ${interval} mins`)
       await sleep(1000 * 60 * interval)
     }
@@ -35,7 +35,7 @@ main()
 
 async function updateLoop() {
   try {
-    const succeeded: any[] = []
+    const succeeded: Account[] = []
 
     for (const account of accounts.filter(a => !(process.env.CI && a.skipInGHA))) {
       try {
@@ -56,10 +56,9 @@ async function updateLoop() {
           discovered.add(transaction._id)
           logger.info(`pushed id ${transaction._id}`)
         }
-        
+
         succeeded.push(account)
-      }
-      catch (e) {
+      } catch (e) {
         logger.warning(`updating account ${account.company} failed: ${e}`)
       }
     }
@@ -69,28 +68,24 @@ async function updateLoop() {
     for (const account of succeeded) {
       if (account.pingUrl) ping(account.pingUrl)
     }
-  }
-  catch (e) {
+  } catch (e) {
     logger.warning(`updating failed: ${e}`)
   }
-
 }
-
 
 async function fillDiscovered(from: Date) {
   const docs = await Transaction.find({ date: { $gte: from } }, "_id")
   docs.forEach(doc => discovered.add(doc._id))
 }
 
-
 function startTime(): Date {
   const startDate = new Date()
-  startDate.setDate(startDate.getDate() - <number>config.get('daysAgo'))
+  startDate.setDate(startDate.getDate() - (config.get('daysAgo') as number))
   return startDate
 }
 
 function startTimeMinusWeek(): Date {
   const startDate = new Date()
-  startDate.setDate(startDate.getDate() - (<number>config.get('daysAgo') + 7))
+  startDate.setDate(startDate.getDate() - (config.get('daysAgo') as number + 7))
   return startDate
 }

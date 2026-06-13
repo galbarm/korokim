@@ -1,9 +1,10 @@
 import crypto from 'crypto'
-import { ScraperScrapingResult, createScraper } from 'israeli-bank-scrapers'
+import { ScraperScrapingResult, ScraperCredentials, createScraper } from 'israeli-bank-scrapers'
 import Transaction from './transaction'
 import logger from './logger'
+import { Account } from './types'
 
-export async function scrape(account: any, from: Date): Promise<ScraperScrapingResult> {
+export async function scrape(account: Account, from: Date): Promise<ScraperScrapingResult> {
   const options = {
     companyId: account.company,
     startDate: from,
@@ -20,8 +21,8 @@ export async function scrape(account: any, from: Date): Promise<ScraperScrapingR
     id: account.id,
     card6Digits: account.card6Digits,
     num: account.num,
-    userCode: account.userCode
-  }
+    userCode: account.userCode,
+  } as ScraperCredentials
 
   logger.info(`fetching company ${options.companyId}...`)
   
