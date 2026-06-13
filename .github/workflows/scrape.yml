@@ -24,8 +24,7 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Install Puppeteer browsers
-        run: npx puppeteer browsers install chrome
-
       - name: Run scraper
         run: npm start
+        env:
+          PUPPETEER_EXECUTABLE_PATH: /usr/bin/google-chrome-stable
