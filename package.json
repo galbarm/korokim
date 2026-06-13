@@ -14,7 +14,6 @@
     "winston": "latest"
   },
   "devDependencies": {
-    "@types/config": "latest",
     "@types/escape-html": "latest",
     "@types/nodemailer": "latest",
     "ts-node": "latest",
