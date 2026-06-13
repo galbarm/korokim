@@ -37,7 +37,7 @@ async function updateLoop() {
   try {
     const succeeded: any[] = []
 
-    for (const account of accounts) {
+    for (const account of accounts.filter(a => !(process.env.CI && a.skipInCI))) {
       try {
         const scrapingResult = await scrape(account, startTime())
 
