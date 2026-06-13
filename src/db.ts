@@ -22,7 +22,7 @@ db.on('reconnected', () => {
 })
 
 db.on('disconnected', () => {
-  logger.error('MongoDB disconnected!')
+  logger.info('MongoDB disconnected!')
 });
 
 export async function connectDB() {
