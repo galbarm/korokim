@@ -10,7 +10,6 @@
     "israeli-bank-scrapers": "latest",
     "mongoose": "latest",
     "nodemailer": "latest",
-    "puppeteer": "latest",
     "winston": "latest"
   },
   "devDependencies": {
